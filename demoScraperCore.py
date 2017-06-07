@@ -660,11 +660,11 @@ def scraperThread(n, user, password, prettylist, schoollist, folder, downloadTim
                         studentDict['3PR'] = grade_3PR
                         studentDict['4PR'] = grade_4PR
 
-                    with printLock:
-                        print n,"-","grade_1RC"
-                        print n,"-",grade_1RC
-                        for key in studentDict.keys():
-                            print key, len(studentDict[key])
+                    # with printLock:
+                    #     print n,"-","grade_1RC"
+                    #     print n,"-",grade_1RC
+                    #     for key in studentDict.keys():
+                    #         print key, len(studentDict[key])
 
                     try:
                         studentdf = pd.DataFrame(studentDict)
@@ -675,10 +675,10 @@ def scraperThread(n, user, password, prettylist, schoollist, folder, downloadTim
                         # classdfs[section] = studentdf
 
                         studentdf.to_csv(fname)
-                        with printLock:
-                            print n,"-",selection,"Demographics"
-                            print studentdf
-                            print
+                        # with printLock:
+                        #     print n,"-",selection,"Demographics"
+                        #     print studentdf
+                        #     print
                     except ValueError:
                         with printLock:
                             print n,"-",fname,"failed due to missing grades"
