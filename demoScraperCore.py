@@ -377,7 +377,11 @@ def scraperThread(n, user, password, prettylist, schoollist, folder, downloadTim
                 # find attributes from row
                 attrs = rowSoup.find_all('td')
                 # isolate the section name
-                section = attrs[1].text.encode('utf-8').translate(string.maketrans("",""), string.punctuation)
+                try:
+                    section = attrs[1].text.encode('utf-8').translate(string.maketrans("",""), string.punctuation)
+                except IndexError:
+                    print n,"-",pretty,"IndexError"
+                    continue
                 # isolate teacher of class
                 teacher = attrs[2].text
                 # isolate semester
