@@ -12,6 +12,7 @@ This tool scrapes sim.cps.k12.il.us for data regarding students in CS4All classe
 This information is stored in CSV files for each class, and this information is then compiled into files for each school, network, and the entire district.
 
 ### Dependencies
+- Python 2.7 (modules: bs4, collections, datetime, getpass, matplotlib, numpy, os, pandas, selenium, shutil, string, sys, threading, time, unicodecsv, urllib2)
 - Selenium
 - PhantomJS Webdriver
 - Chrome Webdriver
