@@ -181,12 +181,14 @@ login(user, password)
 Input:
 user - username
 password - user's password
+n - thread id
+lock - printLock
 chrome - boolean that dictates whether the driver will be a chrome or PhantonJS driver
 
 Output: driver
 driver - Selenium webdriver that is logged into the SIM site
 """
-def login(user, password, chrome=False):
+def login(user, password, n=None, lock=None, chrome=False):
     # initialize driver
     if chrome:
         driver = webdriver.Chrome()
@@ -198,7 +200,11 @@ def login(user, password, chrome=False):
     driver.get("http://sim.cps.k12.il.us/")
 
     # LOGIN PAGE
-    print "\nSigning in"
+    if n and lock:
+        with lock:
+            print n,"-","Signing in"
+    else:
+        print "\nSigning in"
     loggedin = False
 
     # somtimes the login page does not load properly, so this will loop until
@@ -221,7 +227,11 @@ def login(user, password, chrome=False):
             loggedin = True
         except NoSuchElementException:
             loggedin = False
-    print "Signed in"
+    if n and lock:
+        with lock:
+            print n,"-","Signed in"
+    else:
+        print "Signed in"
     # return driver with SIM page properly logged into
     return driver
 
@@ -987,3 +997,127 @@ def reportMerge(folder, ECS=True):
                         else:
                             percent = 0
                         gal.writerow([dm, cat, percent, num, total])
+
+"""
+generates general success report for networks
+"""
+def networkSuccessReport(root, network):
+    date = root.split(' ')[0]
+
+    cpsdf = pd.DataFrame.from_csv("CPS_Schools.csv")
+    schoolSizedf = pd.DataFrame.from_csv("schoolSizes.csv")
+
+    folderList = os.listdir(root)
+    schools = []
+    noECSschools = []
+
+    schoolS1summary = date + ' S1 ECS Summary.csv'
+    schoolS2summary = date + ' S2 ECS Summary.csv'
+    schooldict = {'school' : [], 'ECS' : [], 'Total Grade 9' : [], 'Grade 9 FS' : [], 'Grade 9 SS' : [],
+                    'Total Grade 7': [], 'Grade 7 FS' : [], 'Grade 7 SS' : [],
+                    'Total Grade 8': [], 'Grade 8 FS' : [], 'Grade 8 SS' : []}
+
+    for school in networks[network]:
+
+        sf = date + " " + school
+        if sf in folderList:
+            schools.append(school)
+            ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
+            seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
+            eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
+            # print school,ninthgraders
+            print school
+            s1df = pd.DataFrame.from_csv(root + sf + '\\' + schoolS1summary)
+            s2df = pd.DataFrame.from_csv(root + sf + '\\' + schoolS2summary)
+
+            S19 = s1df[s1df['cat'] == '9']['num'].tolist()
+            if len(S19):
+                S19 = S19[0]
+            else:
+                S19 = 0
+
+            S29 = s2df[s2df['cat'] == '9']['num'].tolist()
+            if len(S29):
+                S29 = S29[0]
+            else:
+                S29 = 0
+
+            S17 = s1df[s1df['cat'] == '7']['num'].tolist()
+            if len(S17):
+                S17 = S17[0]
+            else:
+                S17 = 0
+
+            S27 = s2df[s2df['cat'] == '7']['num'].tolist()
+            if len(S27):
+                S27 = S27[0]
+            else:
+                S27 = 0
+
+            S18 = s1df[s1df['cat'] == '8']['num'].tolist()
+            if len(S18):
+                S18 = S18[0]
+            else:
+                S18 = 0
+
+            S28 = s2df[s2df['cat'] == '8']['num'].tolist()
+            if len(S28):
+                S28 = S28[0]
+            else:
+                S28 = 0
+
+            schooldict['school'].append(school)
+            schooldict['ECS'].append('Y')
+            schooldict['Total Grade 7'].append(seventhgraders)
+            schooldict['Total Grade 8'].append(eighthgraders)
+            schooldict['Total Grade 9'].append(ninthgraders)
+            schooldict['Grade 7 FS'].append(S17)
+            schooldict['Grade 8 FS'].append(S18)
+            schooldict['Grade 9 FS'].append(S19)
+            schooldict['Grade 7 SS'].append(S27)
+            schooldict['Grade 8 SS'].append(S28)
+            schooldict['Grade 9 SS'].append(S29)
+
+
+    nwdf = cpsdf[cpsdf['Network'] == network]
+    nwdf = nwdf[nwdf['Primary Grade Category'] == 'High']
+    nwHighSchools = nwdf['School Long Name'].tolist()
+    nwHSset = set(nwHighSchools)
+    schoolset = set(schools)
+    noECSschools = list(nwHSset - schoolset)
+
+    for school in noECSschools:
+        print school
+        seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
+        eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
+        ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
+        schooldict['school'].append(school)
+        schooldict['ECS'].append('N')
+        schooldict['Total Grade 7'].append(seventhgraders)
+        schooldict['Total Grade 8'].append(eighthgraders)
+        schooldict['Total Grade 9'].append(ninthgraders)
+        schooldict['Grade 7 FS'].append(0)
+        schooldict['Grade 7 SS'].append(0)
+        schooldict['Grade 8 FS'].append(0)
+        schooldict['Grade 8 SS'].append(0)
+        schooldict['Grade 9 FS'].append(0)
+        schooldict['Grade 9 SS'].append(0)
+
+
+    nwFolder = root + '\\' + date + ' Network Reports\\' + date
+    s1 = nwFolder + ' S1 ' + network
+    s2 = nwFolder + ' S2 ' + network
+    s1merge = s1 + ' ECS MergeFile.csv'
+    s1mdf = pd.DataFrame.from_csv(s1merge)
+    s2merge = s2 + ' ECS MergeFile.csv'
+    s2mdf = pd.DataFrame.from_csv(s2merge)
+    s1summary = s1 + ' ECS Summary.csv'
+    s1sdf = pd.DataFrame.from_csv(s1summary)
+    s2summary = s2 + ' ECS Summary.csv'
+    s2sdf = pd.DataFrame.from_csv(s2summary)
+
+    df = pd.DataFrame.from_dict(schooldict)
+    df = df[['school', 'ECS', 'Total Grade 9', 'Grade 9 FS', 'Grade 9 SS', 'Total Grade 7', 'Grade 7 FS', 'Grade 7 SS', 'Total Grade 8', 'Grade 8 FS', 'Grade 8 SS']]
+    df.set_index('school', inplace=True)
+
+    df.to_csv(root + date + ' Network Reports\\' + date + ' ' + network + ' General Summary.csv')

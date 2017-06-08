@@ -1,5 +1,6 @@
 from demoScraperCore import fromReportFile, findSchools, testLogin, sThread, calibrateSchools, reportMerge
 import argparse, os, datetime, numpy, time, threading
+from networks import networks
 
 parser = argparse.ArgumentParser(description="This script does stuff")
 parser.add_argument('-t', dest='reportFile', type=str, metavar="<reportfile.txt>",
@@ -71,3 +72,6 @@ for i in range(threadCount):
 print "THREADS COMPLETE"
 
 reportMerge(folder + '\\')
+
+for nw in networks:
+    networkSuccessReport(folder + '\\', nw)
