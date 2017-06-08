@@ -1000,36 +1000,45 @@ def reportMerge(folder, ECS=True):
 
 """
 generates general success report for networks
+root - root folder
+network - build report for this network
 """
 def networkSuccessReport(root, network):
+    # date from root folder
     date = root.split(' ')[0]
-
+    # dataframes used to build reports
     cpsdf = pd.DataFrame.from_csv("CPS_Schools.csv")
     schoolSizedf = pd.DataFrame.from_csv("schoolSizes.csv")
-
+    # list of folders in root folder
     folderList = os.listdir(root)
     schools = []
     noECSschools = []
 
+    # generic file names
     schoolS1summary = date + ' S1 ECS Summary.csv'
     schoolS2summary = date + ' S2 ECS Summary.csv'
     schooldict = {'school' : [], 'ECS' : [], 'Total Grade 9' : [], 'Grade 9 FS' : [], 'Grade 9 SS' : [],
                     'Total Grade 7': [], 'Grade 7 FS' : [], 'Grade 7 SS' : [],
                     'Total Grade 8': [], 'Grade 8 FS' : [], 'Grade 8 SS' : []}
 
+    # iterate through schools in provided network
     for school in networks[network]:
-
+        # school folder
         sf = date + " " + school
+        # iterate through schools in the folderlist
         if sf in folderList:
             schools.append(school)
+            # find total number of students in 7th, 8th, and 9th grade
             ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
             seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
             eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
-            # print school,ninthgraders
+
+            # school dataframes
             print school
             s1df = pd.DataFrame.from_csv(root + sf + '\\' + schoolS1summary)
             s2df = pd.DataFrame.from_csv(root + sf + '\\' + schoolS2summary)
 
+            # find number of students in ECS in 7th, 8th, and 9th grade in ECS
             S19 = s1df[s1df['cat'] == '9']['num'].tolist()
             if len(S19):
                 S19 = S19[0]
@@ -1079,6 +1088,7 @@ def networkSuccessReport(root, network):
             schooldict['Grade 9 SS'].append(S29)
 
 
+    # find high schools in network without ECS
     nwdf = cpsdf[cpsdf['Network'] == network]
     nwdf = nwdf[nwdf['Primary Grade Category'] == 'High']
     nwHighSchools = nwdf['School Long Name'].tolist()
@@ -1086,6 +1096,7 @@ def networkSuccessReport(root, network):
     schoolset = set(schools)
     noECSschools = list(nwHSset - schoolset)
 
+    # iterate through high schools without ECS
     for school in noECSschools:
         print school
         seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
@@ -1103,19 +1114,7 @@ def networkSuccessReport(root, network):
         schooldict['Grade 9 FS'].append(0)
         schooldict['Grade 9 SS'].append(0)
 
-
-    nwFolder = root + '\\' + date + ' Network Reports\\' + date
-    s1 = nwFolder + ' S1 ' + network
-    s2 = nwFolder + ' S2 ' + network
-    s1merge = s1 + ' ECS MergeFile.csv'
-    s1mdf = pd.DataFrame.from_csv(s1merge)
-    s2merge = s2 + ' ECS MergeFile.csv'
-    s2mdf = pd.DataFrame.from_csv(s2merge)
-    s1summary = s1 + ' ECS Summary.csv'
-    s1sdf = pd.DataFrame.from_csv(s1summary)
-    s2summary = s2 + ' ECS Summary.csv'
-    s2sdf = pd.DataFrame.from_csv(s2summary)
-
+    # build report csv
     df = pd.DataFrame.from_dict(schooldict)
     df = df[['school', 'ECS', 'Total Grade 9', 'Grade 9 FS', 'Grade 9 SS', 'Total Grade 7', 'Grade 7 FS', 'Grade 7 SS', 'Total Grade 8', 'Grade 8 FS', 'Grade 8 SS']]
     df.set_index('school', inplace=True)
