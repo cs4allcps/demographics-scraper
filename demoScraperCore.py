@@ -1033,9 +1033,20 @@ def networkSuccessReport(root, network):
         if sf in folderList:
             schools.append(school)
             # find total number of students in 7th, 8th, and 9th grade
-            ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
-            seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
-            eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
+            try:
+                ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
+            except IndexError:
+                ninthgraders = 'NaN'
+
+            try:
+                seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
+            except IndexError:
+                seventhgraders = 'NaN'
+
+            try:
+                eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
+            except IndexError:
+                eighthgraders = 'NaN'
 
             # school dataframes
             print school
@@ -1103,9 +1114,21 @@ def networkSuccessReport(root, network):
     # iterate through high schools without ECS
     for school in noECSschools:
         print school
-        seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
-        eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
-        ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
+        try:
+            ninthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['09'].tolist()[0]
+        except IndexError:
+            ninthgraders = 'NaN'
+
+        try:
+            seventhgraders = schoolSizedf[schoolSizedf['School Name'] == school]['07'].tolist()[0]
+        except IndexError:
+            seventhgraders = 'NaN'
+
+        try:
+            eighthgraders = schoolSizedf[schoolSizedf['School Name'] == school]['08'].tolist()[0]
+        except IndexError:
+            eighthgraders = 'NaN'
+
         schooldict['school'].append(school)
         schooldict['ECS'].append('N')
         schooldict['Total Grade 7'].append(seventhgraders)
@@ -1123,4 +1146,9 @@ def networkSuccessReport(root, network):
     df = df[['school', 'ECS', 'Total Grade 9', 'Grade 9 FS', 'Grade 9 SS', 'Total Grade 7', 'Grade 7 FS', 'Grade 7 SS', 'Total Grade 8', 'Grade 8 FS', 'Grade 8 SS']]
     df.set_index('school', inplace=True)
 
-    df.to_csv(root + date + ' Network Reports\\' + date + ' ' + network + ' General Summary.csv')
+    if network:
+        fname = root + date + ' Network Reports\\' + date + ' ' + network + ' General Summary.csv'
+    else:
+        fname = root + date + ' Network Reports\\' + date + ' ' + "Unknown Network" + ' General Summary.csv'
+
+    df.to_csv(fname)
